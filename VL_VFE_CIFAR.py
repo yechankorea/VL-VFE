@@ -322,9 +322,9 @@ def train(model=model):
                 pruned_dim = pruned_number
                 saved_model = copy.deepcopy(model.state_dict())
                 print('Best ckpt:',test_acc,'pruned_number:',pruned_dim,'beta:',args.beta)
-                torch.save({'model': saved_model}, './CIFAR_best_ckpt_dim:{}_beta:{}_model.pth'.format(args.intermediate_dim,args.beta))
+                torch.save({'model': saved_model}, './CIFAR_best_ckpt_dim_{}_beta_{}_model.pth'.format(args.intermediate_dim,args.beta))
     print('Best Accuracy:',test_acc,'Intermediate Dim:',args.intermediate_dim,'Beta:',args.beta)
-    torch.save({'model': saved_model}, './CIFAR_model_dim:{}_beta:{}_accuracy:{}_model.pth'.format(args.intermediate_dim - pruned_dim,args.beta,test_acc))
+    torch.save({'model': saved_model}, './CIFAR_model_dim_{}_beta_{}_accuracy_{}_model.pth'.format(args.intermediate_dim - pruned_dim,args.beta,test_acc))
 
 def test(epoch,noise=0.1):
     with torch.no_grad():

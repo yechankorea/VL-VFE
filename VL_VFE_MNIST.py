@@ -224,7 +224,7 @@ def main_train():
                 pruned_dim = pruned_number
                 saved_model = copy.deepcopy(model.state_dict())
     print('Best Accuray:',test_acc,'pruned_number:',pruned_dim,'activated_dim:',args.intermediate_dim - pruned_dim)
-    torch.save({'model': saved_model}, './MNIST_model_dim:{}_beta:{}_accuracy:{:.4f}_model.pth'.format(args.intermediate_dim - pruned_dim,args.beta, test_acc))
+    torch.save({'model': saved_model}, './MNIST_model_dim_{}_beta_{}_accuracy_{:.4f}_model.pth'.format(args.intermediate_dim - pruned_dim,args.beta, test_acc))
 
 def main_test():
     kwargs = {'num_workers': 1, 'pin_memory': True}
