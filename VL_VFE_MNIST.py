@@ -1,3 +1,5 @@
+# traing : python VL_VFE_MNIST.py --intermediate_dim 64 --beta 6e-3 --threshold 1e-2 --epochs 1 --model_viz 1 
+# test :  python VL_VFE_MNIST.py --test 1 --intermediate_dim 64 --channel_noise 0.1 --threshold 1e-2 --model_viz 1 --weights pretrained이름.pth
 import argparse
 import torch
 import torch.nn as nn
@@ -6,7 +8,9 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 import torch.nn.init as init
+from torchviz import make_dot
 import copy
+
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch_size', type=int, default=128)
@@ -20,8 +24,10 @@ parser.add_argument('--beta', type=float, default=1e-3)
 parser.add_argument('--threshold', type=float, default=1e-2)
 parser.add_argument('--test', type=int, default=0)
 parser.add_argument('--weights', type=str)
+parser.add_argument('--model_viz', type=bool, default = 0)
 
 args = parser.parse_args()
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def seed_torch(seed=0):
@@ -143,7 +149,7 @@ class Net(nn.Module):
         k2 = 1.8732
         k3 = 1.48695
         batch_size = alpha_squared.size(0)
-        KL_term = k1 * F.sigmoid(k2 + k3 * torch.log(alpha_squared)) - 0.5 * F.softplus(-1 * torch.log(alpha_squared)) - k1
+        KL_term = k1 * torch.sigmoid(k2 + k3 * torch.log(alpha_squared)) - 0.5 * F.softplus(-1 * torch.log(alpha_squared)) - k1
 
         return - torch.sum(KL_term) / batch_size
 
@@ -184,13 +190,29 @@ def test(args, model, device, test_loader,noise = 0.2):
 
 def main_train():
     kwargs = {'num_workers': 1, 'pin_memory': True}
-    test_loader = torch.utils.data.DataLoader(datasets.MNIST('./data', train=False, transform=transforms.Compose([
+    test_loader = torch.utils.data.DataLoader(datasets.MNIST('./data', train=False,download =True, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     model = Net(args).to(device)
+
+    # 모델 시각화
+    if args.model_viz:
+        data_loader = torch.utils.data.DataLoader(
+            datasets.MNIST('./data', download=False, train=False, transform=transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])))
+        batch = next(iter(data_loader))
+        inputs = batch[0]  # this is what you had
+        inputs = inputs.cuda()  # add this line
+        yhat = model(inputs, 1)  # Give dummy batch to forward().
+        make_dot(yhat, params=dict(list(model.named_parameters()))).render("viz_dir/MNIST_model_visualization_result",format="png")
+
+
+
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay = 5e-5)
     scheduler = StepLR(optimizer, step_size=45, gamma=args.gamma)
     
